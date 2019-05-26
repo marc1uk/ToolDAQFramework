@@ -81,6 +81,14 @@ class BoostStore{
     else return false;
     
   }
+  
+  bool GetType(std::string name, std::string& thetype){
+    if(m_type_info.count(name)!=0){
+	thetype=m_type_info.at(name);
+	return true;
+    }
+    else return false;
+  }
 
 
   template<typename T> bool Get(std::string name,T* &out){  
