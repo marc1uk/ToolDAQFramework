@@ -63,7 +63,7 @@ ToolChain::ToolChain(std::string configfile){
 	  std::string conf;
 	  std::stringstream stream(line);
 
-          if(stream>>name>>tool>>conf) Add(name,Factory(tool),conf);
+          if(stream>>name>>tool>>conf) Add(name,Factory(tool),tool, conf);
 
         }
       }
@@ -155,7 +155,7 @@ void ToolChain::Init(unsigned int IO_Threads){
 
 
 
-void ToolChain::Add(std::string name,Tool *tool,std::string configfile){
+void ToolChain::Add(std::string name,Tool *tool,std::string className, std::string configfile){
   if(tool!=0){
     // if(m_verbose)*(m_data.Log)<<"Adding Tool=\""<<name<<"\" tool chain"<<std::endl;
     logmessage<<"Adding Tool='"<<name<<"' to ToolChain";
@@ -165,6 +165,10 @@ void ToolChain::Add(std::string name,Tool *tool,std::string configfile){
     m_tools.push_back(tool);
     m_toolnames.push_back(name);
     m_configfiles.push_back(configfile);
+    
+    // inform the Tool of its name
+    tool->m_unique_name = name;
+    tool->m_class_name = className;
     
     //    if(m_verbose)*(m_data.Log)<<"Tool=\""<<name<<"\" added successfully"<<std::endl<<std::endl; 
     logmessage<<"Tool='"<<name<<"' added successfully"<<std::endl;

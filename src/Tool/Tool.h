@@ -24,6 +24,9 @@ class Tool{
   virtual bool Finalise()=0; ///< Virtual Finalise function.
   virtual ~Tool(){}; ///< virtual destructor.
   
+  std::string m_unique_name; ///< unique name for this Tool instance
+  std::string m_class_name; ///< name of this tool's class
+  
  protected:
   
   Store m_variables; ///< Store used to store configuration varaibles

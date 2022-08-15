@@ -171,7 +171,7 @@ class BoostStore{
            
       oa & in;
             
-      stream.str(stream.str().replace(0,40,""));
+      stream.str(stream.str().replace(0,36,""));
             
     }
     else{
@@ -223,7 +223,7 @@ class BoostStore{
       if(m_format==0 ||m_format==2){
 	boost::archive::binary_oarchive oa(stream);
 	oa & *in;
-	stream.str(stream.str().replace(0,40,""));
+	stream.str(stream.str().replace(0,36,""));
       }
       else{
 	boost::archive::text_oarchive oa(stream);
@@ -292,7 +292,7 @@ class BoostStore{
       boost::archive::text_oarchive oa(stream);
       oa & tmp;
     }
-    if(m_format==0 || m_format==2) m_archiveheader=stream.str().substr(0,40);
+    if(m_format==0 || m_format==2) m_archiveheader=stream.str().substr(0,36);
     else  m_archiveheader=stream.str().substr(0,28);
   }
   

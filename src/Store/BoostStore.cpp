@@ -75,7 +75,7 @@ bool BoostStore::Initialise(std::string filename, int type){
 	    if(!m_format){
 	      boost::archive::binary_oarchive oa(stream);
 	      oa & value;
-	      stream.str(stream.str().replace(0,40,""));
+	      stream.str(stream.str().replace(0,36,""));
 	    }
 	    else{
 	      boost::archive::text_oarchive oa(stream);
@@ -248,7 +248,7 @@ void BoostStore::JsonParser(std::string input){
       if(!m_format){
 	boost::archive::binary_oarchive oa(stream);
 	oa & value;
-	stream.str(stream.str().replace(0,40,""));
+	stream.str(stream.str().replace(0,36,""));
       }
       else{
 	boost::archive::text_oarchive oa(stream);
