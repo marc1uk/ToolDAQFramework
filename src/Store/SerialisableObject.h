@@ -25,7 +25,7 @@ class SerialisableObject{
  public:
   
   virtual bool Print()=0; ///< Simple virtual Pritn function to ensure inhereted classes have one
-  // virtual ~SerialisableObject(){}; ///< Destructor
+  virtual ~SerialisableObject(){}; ///< Destructor
   bool serialise; ///< Denotes if the calss should be serialised or not when added to a BoostStore. 
   
   //protected:
