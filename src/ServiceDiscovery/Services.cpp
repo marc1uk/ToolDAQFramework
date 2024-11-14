@@ -34,14 +34,10 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
     return false;
   }
    
-  // TODO FIXME with better mechanism
-  // after Initilising the slow control client needs ~15 seconds for the middleman to connect
-  std::this_thread::sleep_for(std::chrono::seconds(15));
-  // hopefully the middleman has found us by now
-  
   return true;
 }
 
+// check whether the socket is ready (i.e whether the middleman has connected to us yet)
 bool Services::Ready(const unsigned int timeout){
   return m_backend_client.Ready(timeout);
 }

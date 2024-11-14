@@ -398,6 +398,25 @@ bool ServicesBackend::SendCommand(const std::string& topic, const std::string& c
 	// This is a wrapper that ensures we always return within the requested timeout.
 	if(verbosity>10) std::cout<<"ServicesBackend::SendCommand invoked with command '"<<command<<"'"<<std::endl;
 	
+	int timeout=command_timeout;            // default timeout for submission of command and receipt of response
+	if(timeout_ms) timeout=*timeout_ms;     // override by user if a custom timeout is given
+	
+	// first check we have a listener - i.e. whether the middleman has found and connected to us yet
+	// since this could take a few seconds (if we only just opened the socket),
+	// time how long it takes and subtract that from the timeout for the follow-up command
+	auto ready_start = std::chrono::high_resolution_clock::now();
+	bool socketready = Ready(timeout);
+	auto ready_end = std::chrono::high_resolution_clock::now();
+	int polled_for_ms = std::chrono::duration_cast<std::chrono::milliseconds>(ready_end - ready_start).count();
+	if(!socketready || polled_for_ms > timeout){
+		std::string errmsg = "ServicesBackend::SendCommand socket not ready";
+		Log(errmsg,v_error,verbosity);
+		if(err) *err = errmsg;
+		return false;
+	}
+	// update the time left to do the query
+	timeout -= polled_for_ms;
+	
 	// encapsulate the command in an object.
 	// We need this since we can only get one return value from an asynchronous function call,
 	// and we want both a response string and error flag.
@@ -446,9 +465,6 @@ bool ServicesBackend::SendCommand(const std::string& topic, const std::string& c
 	// the return from a std::async call is a 'future' object
 	// this object will be populated with the return value when it becomes available,
 	// but we can wait for a given timeout and then bail if it hasn't resolved in time.
-	
-	int timeout=command_timeout;            // default timeout for submission of command and receipt of response
-	if(timeout_ms) timeout=*timeout_ms;     // override by user if a custom timeout is given
 	std::chrono::milliseconds span(timeout);
 	// wrap our attempt to get the future in a try-catch, in case of exception
 	try {
