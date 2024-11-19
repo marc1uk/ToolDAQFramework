@@ -36,7 +36,11 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
   // so we need to wait for the middleman to receive one & connect before we can communicate with it.
   int pub_period=5;
   m_variables.Get("service_publish_sec",pub_period);
-  Ready(pub_period*1000);
+  printf("polling for %d ms to check for readiness\n",pub_period*1000);
+  std::function<bool(const unsigned int)> fr = std::bind(&Services::Ready, this, std::placeholders::_1);
+  int ret = CallForDuration(pub_period*1000, fr, pub_period*1000);
+  //int ret = Ready(pub_period*1000);
+  printf("ready: %d\n",ret);
   
   return true;
 }
@@ -265,7 +269,8 @@ bool Services::GetDeviceConfig(std::string& json_data, const int version, const 
 
 // get a run configuration via configuration ID
 bool Services::GetRunConfig(std::string& json_data, const int config_id, const unsigned int timeout){
-
+  
+  printf("GetRunConfig with timeout %d\n",timeout);
   json_data="";
   
   std::string cmd_string = "{ \"config_id\":"+std::to_string(config_id) + "}";
@@ -343,6 +348,7 @@ bool Services::GetRunConfig(std::string& json_data, const std::string& name, con
 
 bool Services::GetRunDeviceConfig(std::string& json_data, const int runconfig_id, const std::string& device, int* version, unsigned int timeout){
   
+  printf("GetRunDeviceConfig with timeout %d\n",timeout);
   json_data="";
   
   const std::string& name = (device=="") ? m_name : device;

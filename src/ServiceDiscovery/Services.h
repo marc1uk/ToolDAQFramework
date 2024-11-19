@@ -30,6 +30,7 @@ namespace ToolFramework {
     Store info;
   };
   
+  
   class Services{
     
     
@@ -77,6 +78,33 @@ namespace ToolFramework {
     
     template<typename T> T GetSlowControlValue(std::string name){
       return (*sc_vars)[name]->GetValue<T>();
+    }
+    
+    // a function that calls another function repeatedly for a duration
+    template<typename F, typename... Args>
+    //double CallForDuration(int timeout_ms, F func, Args&&... args){
+    double CallForDuration(int timeout_ms, F func, Args&&... args){
+      std::chrono::high_resolution_clock::time_point tfirst = std::chrono::high_resolution_clock::now();
+      int max_call_time=0;
+      int n_calls=0;
+      int max_calls=100;
+      while(true){
+        std::chrono::high_resolution_clock::time_point tstart = std::chrono::high_resolution_clock::now();
+        auto ret = func(std::forward<Args>(args)...);
+        std::chrono::high_resolution_clock::time_point tend = std::chrono::high_resolution_clock::now();
+        if(ret) return ret;
+        int call_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tend-tstart).count();
+        if(call_time_ms > max_call_time) max_call_time = call_time_ms;
+        int total_time = std::chrono::duration_cast<std::chrono::milliseconds>(tend-tfirst).count();
+        int time_left = timeout_ms - total_time;
+        if((time_left < 0) || (max_call_time > time_left)){
+          return ret;
+        }
+        ++n_calls;
+        if(n_calls>max_calls) return ret;
+        if(call_time_ms < 2) sleep(1);
+      }
+      return 0; // dummy
     }
     
     SlowControlCollection* sc_vars;
