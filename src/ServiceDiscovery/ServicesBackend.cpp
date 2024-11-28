@@ -465,7 +465,6 @@ bool ServicesBackend::SendCommand(const std::string& topic, const std::string& c
 }
 
 bool ServicesBackend::DoCommand(Command& cmd, int timeout_ms){
-	printf("DoCommand with timeout %d ms\n",timeout_ms);
 	if(verbosity>10) std::cout<<"ServicesBackend::DoCommand received command"<<std::endl;
 	// submit a command, wait for the response and return it
 	
@@ -732,7 +731,6 @@ bool ServicesBackend::SendNextCommand(){
 	dlr_socket_mutex.lock();
 	if(verbosity>10) std::cout<<"ServicesBackend::SendNextCommand calling PollAndSend"
 	                          <<", message type: "<<cmd.type<<", topic '"<<cmd.topic<<"'"<<std::endl;
-	printf("calling PollAndSend with timeout %d ms\n",cmd.timeout_ms);
 	if(cmd.type=='w'){
 		// write commands go to the pub socket, read commands to the dealer
 		ret = PollAndSend(clt_pub_socket, out_polls.at(0), cmd.timeout_ms, cmd.topic, clt_ID, cmd.msg_id, cmd.command);
