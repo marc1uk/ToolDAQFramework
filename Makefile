@@ -1,7 +1,7 @@
 ZMQLib= -L ../zeromq-4.0.7/lib -lzmq 
 ZMQInclude= -I ../zeromq-4.0.7/include/ 
 
-BoostLib= -L ../boost_1_66_0/install/lib -lboost_date_time -lboost_serialization  -lboost_iostreams
+BoostLib= -L ../boost_1_66_0/install/lib -lboost_date_time -lboost_serialization  -lboost_iostreams -lz
 BoostInclude= -I ../boost_1_66_0/install/include/
 
 DataModelInclude =
