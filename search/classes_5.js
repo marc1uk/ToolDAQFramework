@@ -1,9 +1,6 @@
 var searchData=
 [
-  ['serialisableobject_90',['SerialisableObject',['../classSerialisableObject.html',1,'']]],
-  ['serviceadd_91',['ServiceAdd',['../classServiceAdd.html',1,'']]],
-  ['servicediscovery_92',['ServiceDiscovery',['../classServiceDiscovery.html',1,'']]],
-  ['slowcontrolcollection_93',['SlowControlCollection',['../classSlowControlCollection.html',1,'']]],
-  ['slowcontrolcollectionthread_5fargs_94',['SlowControlCollectionThread_args',['../structSlowControlCollectionThread__args.html',1,'']]],
-  ['slowcontrolelement_95',['SlowControlElement',['../classSlowControlElement.html',1,'']]]
+  ['pointerwrapper_91',['PointerWrapper',['../classToolFramework_1_1PointerWrapper.html',1,'ToolFramework']]],
+  ['pointerwrapperbase_92',['PointerWrapperBase',['../classToolFramework_1_1PointerWrapperBase.html',1,'ToolFramework']]],
+  ['proxy_5fthread_5fargs_93',['Proxy_Thread_args',['../structToolFramework_1_1Proxy__Thread__args.html',1,'ToolFramework']]]
 ];

@@ -1,0 +1,116 @@
+\hypertarget{classToolFramework_1_1Services}{}\doxysection{Tool\+Framework\+::Services Class Reference}
+\label{classToolFramework_1_1Services}\index{ToolFramework::Services@{ToolFramework::Services}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_ab5247f26618c18e6f648a46d91b7ab47}\label{classToolFramework_1_1Services_ab5247f26618c18e6f648a46d91b7ab47}} 
+bool {\bfseries Init} (Store \&m\+\_\+variables, zmq\+::context\+\_\+t $\ast$context\+\_\+in, \mbox{\hyperlink{classToolFramework_1_1SlowControlCollection}{Slow\+Control\+Collection}} $\ast$sc\+\_\+vars\+\_\+in, bool new\+\_\+service=false)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a1bbf480928280cb8ec5c9c85c4027a3e}\label{classToolFramework_1_1Services_a1bbf480928280cb8ec5c9c85c4027a3e}} 
+bool {\bfseries SQLQuery} (const std\+::string \&database, const std\+::string \&query, std\+::vector$<$ std\+::string $>$ \&responses, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aa45ae1d618d7a767d0e1616d9351ab00}\label{classToolFramework_1_1Services_aa45ae1d618d7a767d0e1616d9351ab00}} 
+bool {\bfseries SQLQuery} (const std\+::string \&database, const std\+::string \&query, std\+::string \&response, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aaa4a3d676cbc3836c8d14a1c262057a8}\label{classToolFramework_1_1Services_aaa4a3d676cbc3836c8d14a1c262057a8}} 
+bool {\bfseries SQLQuery} (const std\+::string \&database, const std\+::string \&query, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a7bd404e6802f49573d4a990464d87d3a}\label{classToolFramework_1_1Services_a7bd404e6802f49573d4a990464d87d3a}} 
+bool {\bfseries Send\+Log} (const std\+::string \&message, unsigned int severity=2, const std\+::string \&device=\char`\"{}\char`\"{}, const unsigned int timestamp=0)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a252e6edf3d41c016fe3672fb2406d69f}\label{classToolFramework_1_1Services_a252e6edf3d41c016fe3672fb2406d69f}} 
+bool {\bfseries Send\+Alarm} (const std\+::string \&message, unsigned int level=0, const std\+::string \&device=\char`\"{}\char`\"{}, const unsigned int timestamp=0, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a2f830c695a3eeee5a3ad8c41e3c01956}\label{classToolFramework_1_1Services_a2f830c695a3eeee5a3ad8c41e3c01956}} 
+bool {\bfseries Send\+Monitoring\+Data} (const std\+::string \&json\+\_\+data, const std\+::string \&device=\char`\"{}\char`\"{}, unsigned int timestamp=0)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a208e8dc17264e4443f93bb5382394986}\label{classToolFramework_1_1Services_a208e8dc17264e4443f93bb5382394986}} 
+bool {\bfseries Send\+Calibration\+Data} (const std\+::string \&json\+\_\+data, const std\+::string \&description, const std\+::string \&device=\char`\"{}\char`\"{}, unsigned int timestamp=0, int $\ast$version=nullptr, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aca38a8582a500186e6fbe22172aed5e8}\label{classToolFramework_1_1Services_aca38a8582a500186e6fbe22172aed5e8}} 
+bool {\bfseries Get\+Calibration\+Data} (std\+::string \&json\+\_\+data, int version=-\/1, const std\+::string \&device=\char`\"{}\char`\"{}, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aad7c9381097cff49e03dd27ed9b9dcd9}\label{classToolFramework_1_1Services_aad7c9381097cff49e03dd27ed9b9dcd9}} 
+bool {\bfseries Send\+Device\+Config} (const std\+::string \&json\+\_\+data, const std\+::string \&author, const std\+::string \&description, const std\+::string \&device=\char`\"{}\char`\"{}, unsigned int timestamp=0, int $\ast$version=nullptr, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a6ce08a811882cfa914cd537c5e6cf879}\label{classToolFramework_1_1Services_a6ce08a811882cfa914cd537c5e6cf879}} 
+bool {\bfseries Send\+Run\+Config} (const std\+::string \&json\+\_\+data, const std\+::string \&name, const std\+::string \&author, const std\+::string \&description, unsigned int timestamp=0, int $\ast$version=nullptr, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a3fdf12cfeb956f341258531f20647a07}\label{classToolFramework_1_1Services_a3fdf12cfeb956f341258531f20647a07}} 
+bool {\bfseries Get\+Device\+Config} (std\+::string \&json\+\_\+data, const int version=-\/1, const std\+::string \&device=\char`\"{}\char`\"{}, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_afa0c6406a1df75099552546275eb6bef}\label{classToolFramework_1_1Services_afa0c6406a1df75099552546275eb6bef}} 
+bool {\bfseries Get\+Run\+Config} (std\+::string \&json\+\_\+data, const int config\+\_\+id, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a6811bf0a6934da6140198131fcba79aa}\label{classToolFramework_1_1Services_a6811bf0a6934da6140198131fcba79aa}} 
+bool {\bfseries Get\+Run\+Config} (std\+::string \&json\+\_\+data, const std\+::string \&name, const int version=-\/1, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a0fd44cca8a991988b9efa050de15173d}\label{classToolFramework_1_1Services_a0fd44cca8a991988b9efa050de15173d}} 
+bool {\bfseries Get\+Run\+Device\+Config} (std\+::string \&json\+\_\+data, const int runconfig\+\_\+id, const std\+::string \&device=\char`\"{}\char`\"{}, int $\ast$version=nullptr, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aec3b701660a9efd32f5dc8981f153d0e}\label{classToolFramework_1_1Services_aec3b701660a9efd32f5dc8981f153d0e}} 
+bool {\bfseries Get\+Run\+Device\+Config} (std\+::string \&json\+\_\+data, const std\+::string \&runconfig\+\_\+name, const int runconfig\+\_\+version=-\/1, const std\+::string \&device=\char`\"{}\char`\"{}, int $\ast$version=nullptr, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aae330a4017c2343fee264fdb8bc915c1}\label{classToolFramework_1_1Services_aae330a4017c2343fee264fdb8bc915c1}} 
+bool {\bfseries Send\+ROOTplot} (const std\+::string \&plot\+\_\+name, const std\+::string \&draw\+\_\+options, const std\+::string \&json\+\_\+data, bool persistent=false, int $\ast$version=nullptr, const unsigned int timestamp=0, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a1de08cc6ec59abf120f8f3750f677c28}\label{classToolFramework_1_1Services_a1de08cc6ec59abf120f8f3750f677c28}} 
+bool {\bfseries Send\+Temporary\+ROOTplot} (const std\+::string \&plot\+\_\+name, const std\+::string \&draw\+\_\+options, const std\+::string \&json\+\_\+data, int $\ast$version=nullptr, const unsigned int timestamp=0)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aa263573a77a52632cd54b1166e6c9089}\label{classToolFramework_1_1Services_aa263573a77a52632cd54b1166e6c9089}} 
+bool {\bfseries Send\+Persistent\+ROOTplot} (const std\+::string \&plot\+\_\+name, const std\+::string \&draw\+\_\+options, const std\+::string \&json\+\_\+data, int $\ast$version=nullptr, const unsigned int timestamp=0, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a3c61230a3656afcdbecb4df0a7a78a57}\label{classToolFramework_1_1Services_a3c61230a3656afcdbecb4df0a7a78a57}} 
+bool {\bfseries Get\+ROOTplot} (const std\+::string \&plot\+\_\+name, int \&version, std\+::string \&draw\+\_\+option, std\+::string \&json\+\_\+data, std\+::string $\ast$timestamp=nullptr, const unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_ac4e1b4ce6045d3e4436011097b85e793}\label{classToolFramework_1_1Services_ac4e1b4ce6045d3e4436011097b85e793}} 
+bool {\bfseries Send\+Plotly\+Plot} (const std\+::string \&name, const std\+::string \&json\+\_\+trace, const std\+::string \&json\+\_\+layout=\char`\"{}\{\}\char`\"{}, int $\ast$version=nullptr, unsigned int timestamp=0, unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_ada8c79a1c7459958abb30a62a016483f}\label{classToolFramework_1_1Services_ada8c79a1c7459958abb30a62a016483f}} 
+bool {\bfseries Send\+Plotly\+Plot} (const std\+::string \&name, const std\+::vector$<$ std\+::string $>$ \&json\+\_\+traces, const std\+::string \&json\+\_\+layout=\char`\"{}\{\}\char`\"{}, int $\ast$version=nullptr, unsigned int timestamp=0, unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a6d19e74dfe1abb8cc9fc5ff0842d60f8}\label{classToolFramework_1_1Services_a6d19e74dfe1abb8cc9fc5ff0842d60f8}} 
+bool {\bfseries Get\+Plotly\+Plot} (const std\+::string \&name, int \&version, std\+::string \&json\+\_\+trace, std\+::string \&json\+\_\+layout, unsigned int $\ast$timestamp=nullptr, unsigned int timeout=SERVICES\+\_\+\+DEFAULT\+\_\+\+TIMEOUT)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a40ed4af73e55fa5a4abbf2ff3e6f63d0}\label{classToolFramework_1_1Services_a40ed4af73e55fa5a4abbf2ff3e6f63d0}} 
+\mbox{\hyperlink{classToolFramework_1_1SlowControlCollection}{Slow\+Control\+Collection}} $\ast$ {\bfseries Get\+Slow\+Control\+Collection} ()
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a173d4347983e400e7a5532c55daa5ada}\label{classToolFramework_1_1Services_a173d4347983e400e7a5532c55daa5ada}} 
+\mbox{\hyperlink{classToolFramework_1_1SlowControlElement}{Slow\+Control\+Element}} $\ast$ {\bfseries Get\+Slow\+Control\+Variable} (std\+::string key)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_aee028b87f8b29526fad40df5aab8f875}\label{classToolFramework_1_1Services_aee028b87f8b29526fad40df5aab8f875}} 
+bool {\bfseries Add\+Slow\+Control\+Variable} (std\+::string name, Slow\+Control\+Element\+Type type, std\+::function$<$ std\+::string(const char $\ast$)$>$ change\+\_\+function=nullptr, std\+::function$<$ std\+::string(const char $\ast$)$>$ read\+\_\+function=nullptr)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a5fb01979714493dcc9aaeb6c53b03558}\label{classToolFramework_1_1Services_a5fb01979714493dcc9aaeb6c53b03558}} 
+bool {\bfseries Remove\+Slow\+Control\+Variable} (std\+::string name)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_ae8d4f3d60f0461dd4c25fc5b198ce470}\label{classToolFramework_1_1Services_ae8d4f3d60f0461dd4c25fc5b198ce470}} 
+void {\bfseries Clear\+Slow\+Control\+Variables} ()
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a07ca36384714d29f86d822b3ee78e239}\label{classToolFramework_1_1Services_a07ca36384714d29f86d822b3ee78e239}} 
+bool {\bfseries Alert\+Subscribe} (std\+::string alert, std\+::function$<$ void(const char $\ast$, const char $\ast$)$>$ function)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a72c5b35bb0a60c560d10ad5a18c9572e}\label{classToolFramework_1_1Services_a72c5b35bb0a60c560d10ad5a18c9572e}} 
+bool {\bfseries Alert\+Send} (std\+::string alert, std\+::string payload)
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_a6ebde5dac1d808281079c4223bd4d2f5}\label{classToolFramework_1_1Services_a6ebde5dac1d808281079c4223bd4d2f5}} 
+std\+::string {\bfseries Print\+Slow\+Control\+Variables} ()
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_ab094e53fd778d188c98319539141946d}\label{classToolFramework_1_1Services_ab094e53fd778d188c98319539141946d}} 
+std\+::string {\bfseries Get\+Device\+Name} ()
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_afa6e4f04089d6d878e2646b97e1bf09b}\label{classToolFramework_1_1Services_afa6e4f04089d6d878e2646b97e1bf09b}} 
+{\footnotesize template$<$typename T $>$ }\\T {\bfseries Get\+Slow\+Control\+Value} (std\+::string name)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classToolFramework_1_1Services_af5d0f4435d164fe6e64f39a76ba28768}\label{classToolFramework_1_1Services_af5d0f4435d164fe6e64f39a76ba28768}} 
+\mbox{\hyperlink{classToolFramework_1_1SlowControlCollection}{Slow\+Control\+Collection}} $\ast$ {\bfseries sc\+\_\+vars}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/\+Service\+Discovery/Services.\+h\item 
+src/\+Service\+Discovery/Services.\+cpp\end{DoxyCompactItemize}
