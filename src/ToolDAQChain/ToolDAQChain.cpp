@@ -154,7 +154,7 @@ void ToolDAQChain::Init(unsigned int IO_Threads){
   if(m_pub_sec<0) sendflag=false;
   if(m_kick_sec<0) receiveflag=false;
 
-  SD=new ServiceDiscovery(sendflag,receiveflag, m_remoteport, m_multicastaddress.c_str(),m_multicastport,context,m_UUID,m_service,m_pub_sec,m_kick_sec);
+  SD=new ServiceDiscovery(sendflag,receiveflag, m_remoteport, m_multicastaddress.c_str(),m_multicastport,context, &m_data->vars, m_UUID,m_service,m_pub_sec,m_kick_sec);
  
   if(m_remote) sleep(10); //needed to allow service discovery find time
   
@@ -184,7 +184,7 @@ void ToolDAQChain::Remote(int portnum, std::string SD_address, int SD_port){
   if(m_pub_sec<0) sendflag=false;
   if(m_kick_sec<0) receiveflag=false;
   
-  SD=new ServiceDiscovery(sendflag,receiveflag, m_remoteport, m_multicastaddress.c_str(),m_multicastport,context,m_UUID,m_service,m_pub_sec,m_kick_sec);
+  SD=new ServiceDiscovery(sendflag,receiveflag, m_remoteport, m_multicastaddress.c_str(),m_multicastport,context,&m_data->vars,m_UUID,m_service,m_pub_sec,m_kick_sec);
   
   Remote();
   

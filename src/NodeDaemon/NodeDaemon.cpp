@@ -102,7 +102,7 @@ int main(int argc, char* argv[]){
   if(argc ==2) service<<argv[1];
   service<<" Node Daemon";
 
-  ServiceDiscovery SD(true, false, REMOTE_PORT, MULTICAST_ADDRESS, MULTICAST_PORT, &context, m_UUID, service.str());
+  ServiceDiscovery SD(true, false, REMOTE_PORT, MULTICAST_ADDRESS, MULTICAST_PORT, &context, nullptr, m_UUID, service.str());
 
   //int a =120000;
   zmq::socket_t direct (context, ZMQ_REP);

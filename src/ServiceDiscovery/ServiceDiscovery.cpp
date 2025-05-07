@@ -2,7 +2,7 @@
 
 using namespace ToolFramework;
 
-ServiceDiscovery::ServiceDiscovery(bool Send, bool Receive, int remoteport, std::string address, int multicastport, zmq::context_t * incontext, boost::uuids::uuid UUID, std::string service, int pubsec, int kicksec){
+ServiceDiscovery::ServiceDiscovery(bool Send, bool Receive, int remoteport, std::string address, int multicastport, zmq::context_t * incontext, Store* vars, boost::uuids::uuid UUID, std::string service, int pubsec, int kicksec){
  
     
   m_UUID=UUID;
@@ -13,8 +13,9 @@ ServiceDiscovery::ServiceDiscovery(bool Send, bool Receive, int remoteport, std:
   m_remoteport=remoteport;
   m_send=Send;
   m_receive=Receive;
+  m_vars=vars;
 
-  args= new thread_args(m_UUID, context, m_multicastaddress, m_multicastport, m_service, m_remoteport, pubsec, kicksec);
+  args= new thread_args(m_UUID, context, m_vars, m_multicastaddress, m_multicastport, m_service, m_remoteport, pubsec, kicksec);
 
     if (Receive) pthread_create (&thread[0], NULL, ServiceDiscovery::MulticastListenThread, args);
   
@@ -43,7 +44,7 @@ ServiceDiscovery::ServiceDiscovery( std::string address, int multicastport, zmq:
   m_receive=true;
   m_send=false;
 
-  args= new thread_args(m_UUID, context, m_multicastaddress, m_multicastport, m_service, m_remoteport, 0 , kicksec);
+  args= new thread_args(m_UUID, context, 0, m_multicastaddress, m_multicastport, m_service, m_remoteport, 0 , kicksec);
 
   pthread_create (&thread[0], NULL, ServiceDiscovery::MulticastListenThread, args);
 
@@ -228,8 +229,9 @@ void* ServiceDiscovery::MulticastPublishThread(void* arg){
 	bool statusquery=false;
 	PubServices.at(i).Get("status_query",statusquery);
 	Store mm;
-
-
+	
+	// hack for GAD - skip this
+	statusquery=false;
 	if(statusquery){
 	  
 	  zmq::socket_t StatusCheck (*context, ZMQ_REQ);
@@ -361,6 +363,7 @@ void* ServiceDiscovery::MulticastPublishThread(void* arg){
 	  // bb.Set("msg_value",m_service);
 	  //bb.Set("remote_port",m_remoteport);
 	  if(statusquery) PubServices.at(i).Set("status",mm.Get<std::string>("msg_value")); 
+	  else if(args->vars!=nullptr) PubServices.at(i).Set("status",args->vars->Get<std::string>("Status")); // GAD hack - get status directly from m_data->vars
 	  else PubServices.at(i).Set("status","N/A");
 	  std::string pubmessage;
 	  PubServices.at(i)>>pubmessage;

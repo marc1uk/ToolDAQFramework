@@ -34,7 +34,7 @@ namespace ToolFramework{
   
   struct thread_args{
     
-    thread_args(boost::uuids::uuid inUUID, zmq::context_t *incontext,std::string inmulticastaddress, int inmulticastport, std::string inservice, int inremoteport, int  inpubsec=5, int inkicksec=5){
+    thread_args(boost::uuids::uuid inUUID, zmq::context_t *incontext, Store* invars, std::string inmulticastaddress, int inmulticastport, std::string inservice, int inremoteport, int  inpubsec=5, int inkicksec=5){
       UUID=inUUID;
       context=incontext;
       multicastaddress=inmulticastaddress;
@@ -43,6 +43,7 @@ namespace ToolFramework{
       remoteport=inremoteport;
       pubsec=inpubsec;
       kicksec=inkicksec;
+      vars=invars;
     } ///< Simple construtor to assign thread variables
     
     boost::uuids::uuid UUID; ///< Unique UUID identifier for the ToolChain to be used is service beacons.
@@ -53,6 +54,7 @@ namespace ToolFramework{
     int remoteport; ///< Port for remote connections to control the ToolChain
     int pubsec; ///< The number of seconds between sending multicast beacons
     int kicksec; ///< The number of seconds without receiving a beacon from a remote service to remove them from the services list.
+    Store* vars; ///< Pointer to m_data->vars from main thread
   };
   
   
@@ -84,7 +86,7 @@ namespace ToolFramework{
        @param kicksec The number of seconds without receiving a beacon from a remote service to remove them from the services list.
        
     */
-    ServiceDiscovery(bool Send, bool Receive, int remoteport, std::string address, int multicastport, zmq::context_t * incontext, boost::uuids::uuid UUID, std::string service, int pubsec=5, int kicksec=60);
+    ServiceDiscovery(bool Send, bool Receive, int remoteport, std::string address, int multicastport, zmq::context_t * incontext, Store* vars, boost::uuids::uuid UUID, std::string service, int pubsec=5, int kicksec=60);
     
     /**
        Simpler constructor for only receiving multicast beacons and not sending. This therefor doesnt require the UUID and plublish variables, so can be used for passive listener.
@@ -121,7 +123,7 @@ namespace ToolFramework{
     
     bool m_send; ///< Send bool to determin if the publish thread is created to send multicast beacons     
     bool m_receive; ///< Receive boot to determin if the listen thread is created to receive and collate incomming multicast beacons
-    
+    Store* m_vars;
     
     
   };
