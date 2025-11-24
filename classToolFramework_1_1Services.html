@@ -79,6 +79,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab5247f26618c18e6f648a46d91b7ab47"><td class="memItemLeft" align="right" valign="top"><a id="ab5247f26618c18e6f648a46d91b7ab47"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Init</b> (Store &amp;m_variables, zmq::context_t *context_in, <a class="el" href="classToolFramework_1_1SlowControlCollection.html">SlowControlCollection</a> *sc_vars_in, bool new_service=false)</td></tr>
 <tr class="separator:ab5247f26618c18e6f648a46d91b7ab47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27ea653f9f2c259519efdf97e27b0c3d"><td class="memItemLeft" align="right" valign="top"><a id="a27ea653f9f2c259519efdf97e27b0c3d"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>Ready</b> (const unsigned int timeout=10000)</td></tr>
+<tr class="separator:a27ea653f9f2c259519efdf97e27b0c3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bbf480928280cb8ec5c9c85c4027a3e"><td class="memItemLeft" align="right" valign="top"><a id="a1bbf480928280cb8ec5c9c85c4027a3e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>SQLQuery</b> (const std::string &amp;database, const std::string &amp;query, std::vector&lt; std::string &gt; &amp;responses, const unsigned int timeout=SERVICES_DEFAULT_TIMEOUT)</td></tr>
 <tr class="separator:a1bbf480928280cb8ec5c9c85c4027a3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -94,9 +97,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>SendLog</b> (const st
 <tr class="memitem:a252e6edf3d41c016fe3672fb2406d69f"><td class="memItemLeft" align="right" valign="top"><a id="a252e6edf3d41c016fe3672fb2406d69f"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>SendAlarm</b> (const std::string &amp;message, unsigned int level=0, const std::string &amp;device=&quot;&quot;, const unsigned int timestamp=0, const unsigned int timeout=SERVICES_DEFAULT_TIMEOUT)</td></tr>
 <tr class="separator:a252e6edf3d41c016fe3672fb2406d69f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f830c695a3eeee5a3ad8c41e3c01956"><td class="memItemLeft" align="right" valign="top"><a id="a2f830c695a3eeee5a3ad8c41e3c01956"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>SendMonitoringData</b> (const std::string &amp;json_data, const std::string &amp;device=&quot;&quot;, unsigned int timestamp=0)</td></tr>
-<tr class="separator:a2f830c695a3eeee5a3ad8c41e3c01956"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3bfb2902313cf427285bc3494352093"><td class="memItemLeft" align="right" valign="top"><a id="ac3bfb2902313cf427285bc3494352093"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>SendMonitoringData</b> (const std::string &amp;json_data, const std::string &amp;subject, const std::string &amp;device=&quot;&quot;, unsigned int timestamp=0)</td></tr>
+<tr class="separator:ac3bfb2902313cf427285bc3494352093"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a208e8dc17264e4443f93bb5382394986"><td class="memItemLeft" align="right" valign="top"><a id="a208e8dc17264e4443f93bb5382394986"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>SendCalibrationData</b> (const std::string &amp;json_data, const std::string &amp;description, const std::string &amp;device=&quot;&quot;, unsigned int timestamp=0, int *version=nullptr, const unsigned int timeout=SERVICES_DEFAULT_TIMEOUT)</td></tr>
 <tr class="separator:a208e8dc17264e4443f93bb5382394986"><td class="memSeparator" colspan="2">&#160;</td></tr>
