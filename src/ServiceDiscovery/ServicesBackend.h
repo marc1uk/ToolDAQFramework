@@ -14,6 +14,9 @@
 #include <queue>
 #include <future>
 #include <mutex>
+#include <atomic>
+#include <chrono>        // sleep_for / sleep_until
+#include <thread>        // this_thread
 #include <unistd.h>      // gethostname
 #include <locale>        // toupper/tolower
 #include <functional>    // std::function, std::negate
@@ -27,7 +30,7 @@
 namespace ToolFramework {
 
 struct Command {
-	Command(std::string command_in, char cmd_type_in, std::string topic_in, const unsigned int timeout_ms_in);
+	Command(std::string command_in, char cmd_type_in, std::string topic_in, const uint32_t timeout_ms_in);
 	
 	Command(const Command& cmd_in);  // copy constructor
 	Command(Command&& cmd_in);       // move constructor
@@ -60,8 +63,8 @@ class ServicesBackend {
 	bool Finalise();
 	
 	// interfaces called by clients. These return within timeout.
-	bool SendCommand(const std::string& topic, const std::string& command, std::vector<std::string>* results=nullptr, const unsigned int* timeout_ms=nullptr, std::string* err=nullptr);
-	bool SendCommand(const std::string& topic, const std::string& command, std::string* results=nullptr, const unsigned int* timeout_ms=nullptr, std::string* err=nullptr);
+	bool SendCommand(const std::string& topic, const std::string& command, std::vector<std::string>* results=nullptr, const uint32_t* timeout_ms=nullptr, std::string* err=nullptr);
+	bool SendCommand(const std::string& topic, const std::string& command, std::string* results=nullptr, const uint32_t* timeout_ms=nullptr, std::string* err=nullptr);
 	
 	// multicasts
 	bool SendMulticast(MulticastType type, std::string command, std::string* err=nullptr);
@@ -92,6 +95,9 @@ class ServicesBackend {
 	// multicast socket file descriptors
 	int log_socket=-1;
 	int mon_socket=-1;
+	// mutexes to lock them
+	std::mutex log_socket_mtx;
+	std::mutex mon_socket_mtx;
 	// multicast destination address structure
 	struct sockaddr_in log_addr;
 	struct sockaddr_in mon_addr;
@@ -103,11 +109,11 @@ class ServicesBackend {
 	std::map<uint32_t, std::promise<Command>> waiting_recipients;
 	
 	void Log(std::string msg, int msg_verb, int verbosity); //??  generalise private
-        bool InitZMQ(); //private
+	bool InitZMQ(); //private
 	bool InitMulticast(); // private
 	bool RegisterServices(); //private
 	// wrapper funtion; add command to outgoing queue, receive response. ~30s timeout.
-	bool DoCommand(Command& cmd, int timeout_ms); //private
+	bool DoCommand(Command& cmd, uint32_t timeout_ms); //private
 	// actual send/receive functions
 	bool SendNextCommand(); //private
 	bool GetNextResponse(); //priavte
@@ -118,9 +124,9 @@ class ServicesBackend {
 	
 	// TODO add retrying
 	int max_retries;
-	int inpoll_timeout;
-	int outpoll_timeout;
-	int command_timeout;
+	uint32_t inpoll_timeout;
+	uint32_t outpoll_timeout;
+	uint32_t command_timeout;
 	
 	// TODO add stats reporting
 	boost::posix_time::time_duration resend_period;      // time between resends if not acknowledged
@@ -129,8 +135,8 @@ class ServicesBackend {
 	boost::posix_time::ptime last_read;                  // when we last sent a read command
 	boost::posix_time::ptime last_printout;              // when we last printed out stats about what we're doing
 	
-	int read_commands_failed;
-	int write_commands_failed;
+	std::atomic<int> read_commands_failed{0};
+	std::atomic<int> write_commands_failed{0};
 	
 	// general
 	int verbosity;
@@ -148,14 +154,14 @@ class ServicesBackend {
 	// since that's the one the middleman needs to know to send replies back
 	std::string clt_ID;
 	
-	uint32_t msg_id = 0;
+	std::atomic<uint32_t> msg_id{0};
 	
 	// =======================================================
 	
 	// zmq helper functions
 	// TODO move to separate class as these are shared by middleman
 	
-	int PollAndReceive(zmq::socket_t* sock, zmq::pollitem_t poll, int timeout, std::vector<zmq::message_t>& outputs);
+	int PollAndReceive(zmq::socket_t* sock, zmq::pollitem_t poll, uint32_t timeout, std::vector<zmq::message_t>& outputs);
 	bool Receive(zmq::socket_t* sock, std::vector<zmq::message_t>& outputs);
 	
 	// base cases; send single (final) message part
@@ -198,7 +204,7 @@ class ServicesBackend {
 	// wrapper to do polling if required
 	// version if one part
 	template <typename T>
-	int PollAndSend(zmq::socket_t* sock, zmq::pollitem_t poll, int timeout, T&& message){
+	int PollAndSend(zmq::socket_t* sock, zmq::pollitem_t poll, uint32_t timeout, T&& message){
 		if(verbosity>10) std::cout<<__PRETTY_FUNCTION__<<" called"<<std::endl;
 		int send_ok=0;
 		// check for listener
@@ -229,7 +235,7 @@ class ServicesBackend {
 	// wrapper to do polling if required
 	// version if more than one part
 	template <typename T, typename... Rest>
-	int PollAndSend(zmq::socket_t* sock, zmq::pollitem_t poll, int timeout, T&& message, Rest&&... rest){
+	int PollAndSend(zmq::socket_t* sock, zmq::pollitem_t poll, uint32_t timeout, T&& message, Rest&&... rest){
 		if(verbosity>10) std::cout<<__PRETTY_FUNCTION__<<" called"<<std::endl;
 		int send_ok = 0;
 		// check for listener

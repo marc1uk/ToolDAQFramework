@@ -2,9 +2,9 @@
 
 using namespace ToolFramework;
 
-Command::Command(std::string command_in, char type_in, std::string topic_in, const unsigned int timeout_ms_in){
+Command::Command(std::string command_in, char type_in, std::string topic_in, const uint32_t timeout_ms_in){
 	command = command_in;
-	type = type_in;
+	type = type_in; // TODO type is unnecessary, could just use topic[0]
 	topic=topic_in;
 	success=0;
 	response=std::vector<std::string>{};
@@ -96,22 +96,22 @@ void ServicesBackend::SetUp(zmq::context_t* in_context, std::function<void(std::
 }
 
 bool ServicesBackend::Initialise(std::string configfile){
-
-  /*               Retrieve Configs            */
-  /* ----------------------------------------- */
-  
-  // configuration options can be parsed via a Store class
-  if(configfile!="") m_variables.Initialise(configfile);
-
-  return Initialise(m_variables);
-
+	
+	/*               Retrieve Configs            */
+	/* ----------------------------------------- */
+	
+	// configuration options can be parsed via a Store class
+	if(configfile!="") m_variables.Initialise(configfile);
+	
+	return Initialise(m_variables);
+	
 }
-  
-bool ServicesBackend::Initialise(Store &variables_in){
 
-  std::string tmp="";
-  variables_in>>tmp;
-  m_variables.JsonParser(tmp);
+bool ServicesBackend::Initialise(Store &variables_in){
+	
+	std::string tmp="";
+	variables_in>>tmp;
+	m_variables.JsonParser(tmp);
 	
 	/*            General Variables              */
 	/* ----------------------------------------- */
@@ -280,13 +280,15 @@ bool ServicesBackend::InitMulticast(){
 	/*              Multicast Setup              */
 	/* ----------------------------------------- */
 	
-	int log_port = 55554;
-	int mon_port = 55553;
-	std::string multicast_address = "239.192.1.1";
+	int log_port = 5000;
+	int mon_port = 5000;
+	std::string log_address = "239.192.1.2";
+	std::string mon_address = "239.192.1.3";
 	
 	m_variables.Get("log_port",log_port);
 	m_variables.Get("mon_port",mon_port);
-	m_variables.Get("multicast_address",multicast_address);
+	m_variables.Get("log_address",log_address);
+	m_variables.Get("mon_address",mon_address);
 	
 	// set up multicast socket for sending logging & monitoring data
 	log_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -323,10 +325,10 @@ bool ServicesBackend::InitMulticast(){
 	mon_addr = log_addr;
 	mon_addr.sin_port = htons(mon_port);
 	// convert destination address string to binary
-	get_ok =           inet_aton(multicast_address.c_str(), &log_addr.sin_addr);
-	get_ok = get_ok && inet_aton(multicast_address.c_str(), &mon_addr.sin_addr);
+	get_ok =           inet_aton(log_address.c_str(), &log_addr.sin_addr);
+	get_ok = get_ok && inet_aton(mon_address.c_str(), &mon_addr.sin_addr);
 	if(get_ok==0){ // returns 0 on failure, not success
-		Log("Bad multicast address '"+multicast_address+"'",v_error,verbosity);
+		Log("Bad multicast address '"+log_address+"' or '"+mon_address+"'",v_error,verbosity);
 		return false;
 	}
 	multicast_addrlen = sizeof(log_addr);
@@ -346,9 +348,13 @@ bool ServicesBackend::RegisterServices(){
 	// we can make our lives a little easier by using a Utilities class
 	utilities = new DAQUtilities(context);
 	
-	// we can now register the client sockets with the following:
-	utilities->AddService("slowcontrol_write", clt_pub_port);
-	utilities->AddService("slowcontrol_read",  clt_dlr_port);
+	// register our ports for advertisement
+	get_ok = utilities->AddPort("db_write", clt_pub_port);
+	get_ok = get_ok && utilities->AddPort("db_read",  clt_dlr_port);
+	if(!get_ok){
+		Log("Error advertising ports!",v_error,verbosity);
+		return false;
+	}
 	
 	return true;
 }
@@ -386,8 +392,18 @@ bool ServicesBackend::SendMulticast(MulticastType type, std::string command, std
 	// only immediately evident errors are reported. receipt is not confirmed.
 	if(verbosity>10) std::cout<<"ServicesBackend::SendMulticast invoked with command '"<<command<<"'"<<std::endl;
 	// type: 0=logging, 1=monitoring
-	int multicast_socket = (type==MulticastType::Log) ? log_socket : mon_socket;
-	struct sockaddr_in* multicast_addr = (type==MulticastType::Log) ? &log_addr : &mon_addr; 
+	int multicast_socket;
+	std::mutex* socket_mtx;
+	struct sockaddr_in* multicast_addr;
+	if(type==MulticastType::Log){
+		multicast_socket = log_socket;
+		socket_mtx = &log_socket_mtx;
+		multicast_addr = &log_addr;
+	} else {
+		multicast_socket = mon_socket;
+		socket_mtx = &mon_socket_mtx;
+		multicast_addr = &mon_addr;
+	}
 	
 	/*
 	// check for listeners...? - seems redundant, multicast can always send
@@ -396,7 +412,9 @@ bool ServicesBackend::SendMulticast(MulticastType type, std::string command, std
 	*/
 		
 		// got a listener - ship it
+		socket_mtx->lock();
 		int cnt = sendto(multicast_socket, command.c_str(), command.length()+1, 0, (struct sockaddr*)multicast_addr, multicast_addrlen);
+		socket_mtx->unlock();
 		if(cnt < 0){
 			std::string errmsg = "Error sending multicast message: "+std::string{strerror(errno)};
 			Log(errmsg,v_error,verbosity);
@@ -409,12 +427,12 @@ bool ServicesBackend::SendMulticast(MulticastType type, std::string command, std
 	return true;
 }
 
-bool ServicesBackend::SendCommand(const std::string& topic, const std::string& command, std::vector<std::string>* results, const unsigned int* timeout_ms, std::string* err){
+bool ServicesBackend::SendCommand(const std::string& topic, const std::string& command, std::vector<std::string>* results, const uint32_t* timeout_ms, std::string* err){
 	// send a command and receive response.
 	// This is a wrapper that ensures we always return within the requested timeout.
 	if(verbosity>10) std::cout<<"ServicesBackend::SendCommand invoked with command '"<<command<<"'"<<std::endl;
 	
-	int timeout=command_timeout;            // default timeout for submission of command and receipt of response
+	uint32_t timeout=command_timeout;            // default timeout for submission of command and receipt of response
 	if(timeout_ms) timeout=*timeout_ms;     // override by user if a custom timeout is given
 	
 	// encapsulate the command in an object.
@@ -446,7 +464,7 @@ bool ServicesBackend::SendCommand(const std::string& topic, const std::string& c
 	// In fact it's useful to indicate a topic in all cases, even when the actual message will
 	// (for now) go over a dealer/router combination that cannot filter on the topic.
 	// forward the timeout to the Command (and thus zmq::poll in PollAndSend...) ... is this sensible? HMMMMM FIXME
-	Command cmd{command, type, topic.substr(2,std::string::npos),timeout};
+	Command cmd{command, type, topic,timeout};
 	
 	// wrap our attempt to get the response in try/catch, just in case?
 	try {
@@ -466,7 +484,7 @@ bool ServicesBackend::SendCommand(const std::string& topic, const std::string& c
 	return false;
 }
 
-bool ServicesBackend::SendCommand(const std::string& topic, const std::string& command, std::string* results, const unsigned int* timeout_ms, std::string* err){
+bool ServicesBackend::SendCommand(const std::string& topic, const std::string& command, std::string* results, const uint32_t* timeout_ms, std::string* err){
 	// wrapper for when user expects only one returned response part
 	if(err) *err="";
 	std::vector<std::string> resultsvec;
@@ -480,7 +498,7 @@ bool ServicesBackend::SendCommand(const std::string& topic, const std::string& c
 	return ret;
 }
 
-bool ServicesBackend::DoCommand(Command& cmd, int timeout_ms){
+bool ServicesBackend::DoCommand(Command& cmd, uint32_t timeout_ms){
 	if(verbosity>10) std::cout<<"ServicesBackend::DoCommand received command"<<std::endl;
 	// submit a command, wait for the response and return it
 	
@@ -519,8 +537,8 @@ bool ServicesBackend::DoCommand(Command& cmd, int timeout_ms){
 	// submit a request to send our command.
 	std::promise<int> send_ticket;
 	std::future<int> send_receipt = send_ticket.get_future();
-	send_queue_mutex.lock();
 	if(verbosity>10) std::cout<<"ServicesBackend::DoCommand putting command into waiting-to-send list"<<std::endl;
+	send_queue_mutex.lock();
 	waiting_senders.emplace(cmd, std::move(send_ticket));
 	send_queue_mutex.unlock();
 	
@@ -537,10 +555,10 @@ bool ServicesBackend::DoCommand(Command& cmd, int timeout_ms){
 		// See how long that took to send, and subtract that from our total time allotment
 		// to see how long we have to wait for the response to arrive.
 		auto send_end = std::chrono::high_resolution_clock::now();
-		int send_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(send_end - send_start).count();
-		timeout_ms -= send_time_ms;
-		// juuuust in case, ensure our remaining time is not negative. :)
-		if(timeout_ms<0) timedout=true;
+		auto send_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(send_end - send_start).count();
+		// juuuust in case, make sure we actually still have time left to wait for the response
+		if(send_time_ms > timeout_ms) timedout=true; // shouldn't be possible really
+		else timeout_ms -= send_time_ms;
 	}
 	
 	// did we get a response in time?
@@ -549,7 +567,7 @@ bool ServicesBackend::DoCommand(Command& cmd, int timeout_ms){
 		// sending timed out
 		if(cmd.type=='w') ++write_commands_failed;
 		else if(cmd.type=='r') ++read_commands_failed;
-		Log("Timed out sending command "+std::to_string(thismsgid),v_warning,verbosity);
+		Log("Timed out sending command "+std::to_string(thismsgid),v_error,verbosity);
 		cmd.success = false;
 		cmd.err = "Timed out sending command";
 		
@@ -600,7 +618,7 @@ bool ServicesBackend::DoCommand(Command& cmd, int timeout_ms){
 		// timed out
 		if(cmd.type=='w') ++write_commands_failed;
 		else if(cmd.type=='r') ++read_commands_failed;
-		Log("Timed out waiting for response for command "+std::to_string(thismsgid),v_warning,verbosity);
+		Log("Timed out waiting for response for command "+std::to_string(thismsgid),v_error,verbosity);
 		cmd.success = false;
 		cmd.err = "Timed out waiting for response";
 		return false;
@@ -773,8 +791,9 @@ bool ServicesBackend::Finalise(){
 	background_thread.join();
 	
 	Log("ServicesBackend Removing services",v_debug,verbosity);
-	if(utilities) utilities->RemoveService("slowcontrol_write");
-	if(utilities) utilities->RemoveService("slowcontrol_read");
+	//if(utilities) utilities->RemoveService("slowcontrol_write");
+	if(utilities) utilities->RemovePort("db_read");
+	if(utilities) utilities->RemovePort("db_write");
 	
 	Log("ServicesBackend Closing multicast socket",v_debug,verbosity);
 	close(log_socket);
@@ -886,7 +905,7 @@ bool ServicesBackend::Send(zmq::socket_t* sock, bool more, std::vector<std::stri
 	return send_ok;
 }
 
-int ServicesBackend::PollAndReceive(zmq::socket_t* sock, zmq::pollitem_t poll, int timeout, std::vector<zmq::message_t>& outputs){
+int ServicesBackend::PollAndReceive(zmq::socket_t* sock, zmq::pollitem_t poll, uint32_t timeout, std::vector<zmq::message_t>& outputs){
 	
 	// poll the input socket for messages
 	try {
@@ -950,6 +969,9 @@ bool ServicesBackend::Ready(int timeout){
 	// only poll dealer socket, pub sockets always return true immediately so ignore the timeout
 	// polling the input socket checks for a message, so don't do that.
 	int ret;
+//	printf("ServicesBackend waiting for up to %d ms for connection on read/rep socket\n",timeout);
+//	auto timeout_ms = std::chrono::milliseconds(timeout);
+//	std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 	try {
 		dlr_socket_mutex.lock();
 		ret = zmq::poll(&out_polls.at(1), 1, timeout);
@@ -964,9 +986,12 @@ bool ServicesBackend::Ready(int timeout){
 		return false;
 	} else if(ret==0){
 		// 'resource temoprarily unavailable' - no-one connected.
+//		printf("ServicesBackend::Ready - no one connected (%s)\n", zmq_strerror(errno));
 	} else if(out_polls.at(1).revents & ZMQ_POLLOUT){
+//		printf("Connected!\n");
 		return true;
 	}
+//	printf("returning after %ld/%d ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count(), timeout);
 	
 	return false;
 	
