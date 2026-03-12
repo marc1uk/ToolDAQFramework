@@ -40,6 +40,14 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
   
   sc_vars->InitThreadedReceiver(m_context, sc_port, 100, new_service, alert_receive_port, alerts_receive, alert_send_port, alerts_send);
   m_backend_client.SetUp(m_context);
+
+  sc_vars->Add("State",SlowControlElementType(INFO),0,0,false,false);
+  (*sc_vars)["State"]->SetValue(0);
+  sc_vars->Add("NewConfig",SlowControlElementType(INFO),0,0,false,false);
+  (*sc_vars)["NewConfig"]->SetValue(0);
+  
+  sc_vars->Add("LoadConfig",SlowControlElementType(BUTTON),std::bind(&Services::LoadConfig1, this,  std::placeholders::_1),0,false,false);
+  AlertSubscribe("LoadConfig", std::bind(&Services::LoadConfig2, this,  std::placeholders::_1, std::placeholders::_2));  
   
   if(!m_variables.Get("service_name",m_name)) m_name="test_service";
   if(!m_variables.Get("db_name",m_dbname)) m_dbname="daq";
@@ -958,4 +966,35 @@ std::string Services::TimeStringFromUnixMs(const uint64_t timestamp){
   
   return std::string{timestring};
   
+}
+
+void Services::LoadConfig2(const char* alert, const char* payload){
+
+  LoadConfig1(payload);
+
+}
+
+std::string Services::LoadConfig1(const char* payload){
+
+  Store tmp;
+  tmp.JsonParser(payload);
+  uint64_t base_config_id=0;
+  uint64_t run_mode_config_id=0;
+
+  tmp.Get("Base",base_config_id);
+  tmp.Get("RunMode",run_mode_config_id);
+
+if(run_mode_config_id!=m_run_mode_config_id || base_config_id!=m_base_config_id){
+  
+  //if(!GetRunDeviceConfig(m_local_config, base_config_id, run_mode_config_id)){
+  //  usleep(100000);   
+  // }
+  (*sc_vars)["NewConfig"]->SetValue(1);
+  m_base_config_id = base_config_id;
+  m_run_mode_config_id = run_mode_config_id;
+  
+ }
+
+ return "";
+
 }

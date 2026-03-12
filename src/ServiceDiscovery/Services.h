@@ -80,13 +80,18 @@ namespace ToolFramework {
     SlowControlCollection* sc_vars;
     
   private:
+
+    void LoadConfig2(const char* alert, const char* payload);
+    std::string LoadConfig1(const char* payload);
     
     zmq::context_t* m_context;
     ServicesBackend m_backend_client;
     std::string m_dbname;
     std::string m_name;
-    
-    
+    std::string m_local_config;
+    uint64_t m_base_config_id;
+    uint64_t m_run_mode_config_id;
+
   };
   
 }

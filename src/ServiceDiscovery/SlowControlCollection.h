@@ -27,6 +27,8 @@ namespace ToolFramework{
     std::map<std::string, AlertFunction>* alert_functions;
     std::mutex* alert_functions_mutex;
     bool alerts_receive;
+    bool* testing;
+    std::map<std::string, SlowControlElement*>* SC_vars;
     
   };
   
@@ -41,7 +43,7 @@ namespace ToolFramework{
     bool ListenForData(int poll_length=0);
     bool InitThreadedReceiver(zmq::context_t* context, int port=60000, int poll_length=100, bool new_service=true, int alert_receive_port=12243, bool alert_receive=true, int alert_send_port=12242, bool alert_send=true);
     SlowControlElement* operator[](std::string key);
-    bool Add(std::string name, SlowControlElementType type, SCFunction change_function = 0, SCFunction read_function = 0 );
+    bool Add(std::string name, SlowControlElementType type, SCFunction change_function = 0, SCFunction read_function = 0, bool testing_lock=true, bool hidded=false);
     bool Remove(std::string name);
     void Clear();
     bool AlertSubscribe(std::string alert, AlertFunction function);
@@ -50,7 +52,8 @@ namespace ToolFramework{
     std::string PrintJSON();
     void Stop();
     void JsonParser(std::string json);
-    
+    void TestingEnable();
+    void TestingDisable();
     
     template<typename T> T GetValue(std::string name){
       if(!SC_vars.count(name)) return T{};
@@ -72,11 +75,12 @@ namespace ToolFramework{
     bool m_thread;
     bool m_alerts_receive;
     bool m_alerts_send;
+    bool m_testing;
     
     static void Thread(Thread_args* arg);
     void Unpack(std::string in, std::map<std::string,std::string> &out, std::string header="");
-    bool Update(std::string key, std::string value, std::string &reply, bool &strip);
-    static bool Update( SlowControlCollection* SCC, std::string key, std::string value, std::string &reply, bool &strip);
+    bool Update(std::string key, std::string value, std::string &reply, bool &strip, bool &testing);
+    static bool Update( SlowControlCollection* SCC, std::string key, std::string value, std::string &reply, bool &strip, bool& testing);
     
   };
   

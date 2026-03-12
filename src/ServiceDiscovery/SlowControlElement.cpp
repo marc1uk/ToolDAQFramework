@@ -2,7 +2,7 @@
 
 using namespace ToolFramework;
 
-SlowControlElement::SlowControlElement(std::string name, SlowControlElementType type, SCFunction change_function, SCFunction read_function){
+SlowControlElement::SlowControlElement(std::string name, SlowControlElementType type, SCFunction change_function, SCFunction read_function, bool lockable, bool hidden){
 				       //std::function<std::string(const char*)> function){
   
   m_name=name;
@@ -10,7 +10,8 @@ SlowControlElement::SlowControlElement(std::string name, SlowControlElementType 
   num_options=0;
   m_change_function=change_function;
   m_read_function=read_function;
-  
+  m_lockable=lockable;
+  m_hidden = hidden;
 }
 
 
@@ -240,3 +241,12 @@ bool SlowControlElement::GetValue(std::string &value){
   mtx.unlock();
   return true;
 } 
+
+
+bool SlowControlElement::Lockable(){
+  return m_lockable;
+}
+
+bool SlowControlElement::Hidden(){
+  return m_hidden;
+}

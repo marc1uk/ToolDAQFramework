@@ -10,6 +10,7 @@ SlowControlCollectionThread_args::SlowControlCollectionThread_args(){
   sub=0;
   alert_functions=0;
   alert_functions_mutex=0;
+  SC_vars=0;
 }
 
 SlowControlCollectionThread_args::~SlowControlCollectionThread_args(){
@@ -23,7 +24,7 @@ SlowControlCollectionThread_args::~SlowControlCollectionThread_args(){
   SCC=0;
   alert_functions=0;
   alert_functions_mutex=0;
-  
+  SC_vars=0;
 }
 
 SlowControlCollection::SlowControlCollection(){
@@ -82,6 +83,8 @@ bool SlowControlCollection::Init(zmq::context_t* context, int sc_port, bool new_
   //printf("init p=%p\n", args);
   
   args->alerts_receive=m_alerts_receive;
+  args->testing=&m_testing;
+  args->SC_vars=&SC_vars;
     
     if(m_alerts_send){
     
@@ -170,9 +173,8 @@ bool SlowControlCollection::Init(zmq::context_t* context, int sc_port, bool new_
     }
 
     args->SCC=this;
-    
-    Add("Status",SlowControlElementType(INFO));
-    Add("?",SlowControlElementType(BUTTON));
+    Add("Status",SlowControlElementType(INFO),0,0,false,false);
+    Add("?",SlowControlElementType(BUTTON),0,0,false,true);
     SC_vars["Status"]->SetValue("N/A");
     
     return true;
@@ -261,7 +263,7 @@ void SlowControlCollection::Thread(Thread_args* arg){
     std::string reply="";
     bool strip=false;
 
-    Update(args->SCC, key, value, reply, strip);
+    Update(args->SCC, key, value, reply, strip, *(args->testing));
     /*
     
     if(key == "?"){
@@ -360,8 +362,23 @@ void SlowControlCollection::Thread(Thread_args* arg){
     
     //std::cout<<iss.str()<<std::endl;
     args->alert_functions_mutex->lock();
+    if(iss.str() == "LoadConfig") (*args->SC_vars)["State"]->SetValue(1);
+    else if(iss.str() == "ChangeConfig"){
+      if((*args->SC_vars)["NewConfig"]->GetValue<int>() == 0) return;
+      (*args->SC_vars)["State"]->SetValue(3);
+    }
+    
+    
     if(args->alert_functions->count(iss.str())){
-      if(has_data) (*(args->alert_functions))[iss.str()](iss.str().c_str(), payload.c_str());
+      if(has_data){
+	(*(args->alert_functions))[iss.str()](iss.str().c_str(), payload.c_str());
+	if(iss.str() == "LoadConfig") (*args->SC_vars)["State"]->SetValue(2);
+	else if(iss.str() == "ChangeConfig"){
+	  (*args->SC_vars)["State"]->SetValue(4);
+	  (*args->SC_vars)["NewConfig"]->SetValue(0);
+	}
+   	
+      }
       else         (*(args->alert_functions))[iss.str()](iss.str().c_str(), 0);
     }
     args->alert_functions_mutex->unlock();
@@ -384,10 +401,10 @@ void SlowControlCollection::Clear(){
 }
 
 
-bool SlowControlCollection::Add(std::string name, SlowControlElementType type, SCFunction change_function, SCFunction read_function){
-  
+bool SlowControlCollection::Add(std::string name, SlowControlElementType type, SCFunction change_function, SCFunction read_function, bool testing_lock, bool hidden){
+
   if(SC_vars.count(name)) return false;
-  SC_vars[name] = new SlowControlElement(name, type, change_function, read_function);
+  SC_vars[name] = new SlowControlElement(name, type, change_function, read_function,testing_lock, hidden);
   
   return true;
   
@@ -434,6 +451,7 @@ std::string SlowControlCollection::PrintJSON(){
   std::string reply = "[";
   bool first=true;
   for(std::map<std::string, SlowControlElement*>::iterator it=SC_vars.begin(); it!=SC_vars.end(); it++){
+    if(it->second->Hidden()) continue;
     if(!first) reply+=", ";
     reply +=it->second->Print();
     first = false;
@@ -554,12 +572,12 @@ void SlowControlCollection::Unpack(std::string in, std::map<std::string, std::st
 
 }
 
-bool SlowControlCollection::Update(std::string key, std::string value, std::string &reply, bool &strip){
+bool SlowControlCollection::Update(std::string key, std::string value, std::string &reply, bool &strip, bool& testing){
 
-  return Update(this, key, value, reply, strip);
+  return Update(this, key, value, reply, strip, testing);
 }
 
-bool SlowControlCollection::Update(SlowControlCollection* SCC, std::string key, std::string value, std::string &reply, bool &strip){
+bool SlowControlCollection::Update(SlowControlCollection* SCC, std::string key, std::string value, std::string &reply, bool &strip, bool& testing){
 
   reply="error: " + key;
   strip=false;
@@ -597,16 +615,21 @@ bool SlowControlCollection::Update(SlowControlCollection* SCC, std::string key, 
       //input>>key>>value;
       //printf("d0 %s = %s : %s\n", reply.c_str(), key.c_str(), value.c_str());
       if(value!=""){
-	(*SCC)[key]->SetValue(value);
-	//(*SCC)[key]->Print();
-	SCFunction tmp_func= (*SCC)[key]->GetChangeFunction();
-	if (tmp_func!=nullptr) reply=tmp_func(key.c_str());
-	
+	if(!testing || (testing && !(*SCC)[key]->Lockable())){
+	  
+	  (*SCC)[key]->SetValue(value);
+	  //(*SCC)[key]->Print();
+	  SCFunction tmp_func= (*SCC)[key]->GetChangeFunction();
+	  if (tmp_func!=nullptr) reply=tmp_func(key.c_str());
+	  
+	}
+	else reply = key + " locked";
       }
       else{
 	SCFunction tmp_func= (*SCC)[key]->GetReadFunction();
 	if (tmp_func!=nullptr) reply=tmp_func(key.c_str());
 	else (*SCC)[key]->GetValue(reply);
+	
 	
       }
     }
@@ -615,4 +638,12 @@ bool SlowControlCollection::Update(SlowControlCollection* SCC, std::string key, 
   
   return false;
   
+}
+
+void SlowControlCollection::TestingEnable(){
+  m_testing=true;
+}
+
+void SlowControlCollection::TestingDisable(){
+  m_testing=false;
 }

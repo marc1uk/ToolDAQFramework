@@ -20,7 +20,7 @@ namespace ToolFramework{
     
   public:
     
-    SlowControlElement(std::string name, SlowControlElementType type, SCFunction change_function = 0, SCFunction read_function = 0);
+    SlowControlElement(std::string name, SlowControlElementType type, SCFunction change_function = 0, SCFunction read_function = 0, bool lockable=true, bool hidden=false);
 		       //std::function<std::string(const char*)> function=nullptr);
     std::string GetName();
     bool IsName(std::string name);
@@ -34,7 +34,8 @@ namespace ToolFramework{
     bool SetDefault(std::string value);
     bool SetValue(std::string value);
     bool GetValue(std::string &value); 
-
+    bool Lockable();
+    bool Hidden();
     
     template<typename T> bool SetMin(T value){ 
       if(m_type == SlowControlElementType(VARIABLE)){
@@ -131,6 +132,8 @@ namespace ToolFramework{
     unsigned int num_options;
     SCFunction m_change_function;
     SCFunction m_read_function;
+    bool m_lockable;
+    bool m_hidden;
     
     std::mutex mtx;
     
