@@ -26,11 +26,12 @@
 #include <netinet/in.h>  // multicast
 #include <fcntl.h>       // multicast
 #include <errno.h>
+#include <zstd.h>
 
 namespace ToolFramework {
 
 struct Command {
-	Command(std::string command_in, char cmd_type_in, std::string topic_in, const uint32_t timeout_ms_in);
+	Command(const std::string& command_in, char cmd_type_in, const std::string& topic_in, const uint32_t timeout_ms_in);
 	
 	Command(const Command& cmd_in);  // copy constructor
 	Command(Command&& cmd_in);       // move constructor
@@ -155,6 +156,16 @@ class ServicesBackend {
 	std::string clt_ID;
 	
 	std::atomic<uint32_t> msg_id{0};
+	
+	// used in SendMulticast
+	size_t bytes_to_send;
+	char* msg_to_send=nullptr;
+	
+	ZSTD_CCtx* zstd_ctx=nullptr;
+	int compression_level=1;
+	char* compressed_msg_buf=nullptr;
+	std::mutex msg_buf_mtx; // we'll share this buffer, since it's kind of a large buffer to keep allocating for every call
+	// and we shouldn't be spamming the Send calls so fast mutex contention becomes a problem
 	
 	// =======================================================
 	

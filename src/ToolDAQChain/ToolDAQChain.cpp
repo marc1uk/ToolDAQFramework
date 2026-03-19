@@ -173,11 +173,17 @@ void ToolDAQChain::Init(unsigned int IO_Threads){
     m_DAQdata->services= new Services();
     m_DAQdata->services->Init(m_data->vars, m_DAQdata->context, &m_DAQdata->sc_vars, true);
     DAQLogging* tmp = reinterpret_cast<DAQLogging*>(m_log);
-    using std::placeholders::_1;
-    using std::placeholders::_2;
-    using std::placeholders::_3;
-    using std::placeholders::_4;
-    tmp->SetSendLog(std::bind(&Services::SendLog, m_DAQdata->services, _1, _2, _3, _4));
+    //using std::placeholders::_1;
+    //using std::placeholders::_2;
+    //using std::placeholders::_3;
+    //using std::placeholders::_4;
+    //tmp->SetSendLog(std::bind(&Services::SendLog, m_DAQdata->services, _1, _2, _3, _4));
+    
+    // can't use std::bind because Services::SendLog is overloaded
+    //tmp->SetSendLog(std::bind(static_cast<bool(Services::*)(const std::string& message, unsigned int severity, const std::string& device, const uint64_t timestamp)>(&Services::SendLog), m_DAQdata->services, _1, _2, _3, _4));
+    // use Ben's favourite feature of c++11 instead
+    tmp->SetSendLog([this](const std::string& m, unsigned int ll, const std::string& d, const unsigned int ts)->bool { return m_DAQdata->services->SendLog(m, LogLevel(ll), d, ts); });
+    
     // tmp->SetSendLog(m_DAQdata->services->SendLog);
   }
   
