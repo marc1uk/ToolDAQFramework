@@ -11,6 +11,7 @@ namespace {
 Services::Services(){
   m_context=0;
   m_name="";
+  device_ids.clear();
   m_verbose=false;
   m_base_config_id=0;
   m_run_mode_config_id=0;
@@ -72,10 +73,6 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
 
   
   if(!m_variables.Get("service_name",m_name)) m_name="test_service";
-  if(m_name[0]=='('){
-    if(m_verbose) std::cerr<<"device names cannot start with '('"<<std::endl;
-    return false;
-  }
   // if you wish to use a different name when looking up configurations from the database,
   // such as if sharing a configuration across multiple devices, specify that here
   m_variables.Get("config_name",config_devicename);
@@ -97,6 +94,31 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
     if(m_verbose) std::cerr<<"Warning: service not yet connected..."<<std::endl;
   }
   
+  // get device ID from file if we have it
+  std::string device_id_path;
+  if(m_variables.Get("device_id_path", device_id_path)){
+    Store devnames;
+    devnames.Initialise(device_id_path);
+    for(std::string& devname : devnames.Keys()){
+      device_ids[devname] = devnames.Get<uint64_t>(devname);
+    }
+  }
+  
+  // otherwise fetch device ID for this device name from the DB
+  if(device_ids.count(m_name)==0){
+    if(GetDeviceID(m_name)>0){
+      // store in local file
+      if(!device_id_path.empty()){
+        std::ofstream fdevice_ids(device_id_path);
+        if(fdevice_ids.is_open()){
+          fdevice_ids << m_name << device_ids[m_name];
+        } else {
+          std::cerr<<"Warning: Could not open device_id_path: '"<<device_id_path<<"'"<<std::endl;
+        }
+      }
+    }
+  }
+  
   // start background thread to handle sending batches of buffered logging/monitoring messages
   thread_args.services = this;
   thread_args.logging_buf = &logging_buf;
@@ -109,6 +131,7 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
   thread_args.multicast_send_period_ms = std::chrono::milliseconds{multicast_send_period_ms};
   thread_args.alarm_cooldown_ms = alarm_cooldown_ms;
   thread_args.last_send = std::chrono::steady_clock::now();
+  thread_args.device_ids =&device_ids;
   if(!m_utils.CreateThread("Services", &BufferThread, &thread_args)){
     if(m_verbose) std::cerr<<"failed to spawn background thread"<<std::endl;
     return false;
@@ -1007,6 +1030,9 @@ bool Services::SendLog(const std::string& message, LogLevel severity, const std:
     return false;
   }
   
+  // ensure this device name has an ID in the map
+  GetDeviceID(name);
+  
   // if appending this message to the batch may put the batch over the UDP datagram size limit,
   // we need to send current contents first.
   // actually, let's be more conservative and send before we go over MSS to prevent fragmentation if we can
@@ -1054,6 +1080,9 @@ bool Services::SendMonitoringData(const std::string& json_data, const std::strin
     if(m_verbose) std::cerr<<"Monitoring message is too long!"<<std::endl;
     return false;
   }
+  
+  // ensure this device name has an ID in the map
+  GetDeviceID(name);
   
   // if appending this message to the batch may put the batch over the UDP datagram size limit,
   // we need to send current contents first.
@@ -1291,6 +1320,7 @@ bool Services::BatchAndSendMulticast(BufferThreadArgs* m_args, bool log_lock, bo
                             + "{\"topic\":\"LOGGING\""
                             + ",\"time\":\""+TimeStringFromUnixMs(msg.timestamp)+"\""
                             + ",\"device\":\""+ msg.device +"\""
+                            + ",\"device_id\":"+ std::to_string((*m_args->device_ids)[msg.device])
                             + ",\"severity\":"+std::to_string(int(msg.severity))
                             // we need to escape any " or \ symbols in the user message
                             + ",\"message\":\"" + JsonEscape(msg.message) + "\""
@@ -1317,6 +1347,7 @@ bool Services::BatchAndSendMulticast(BufferThreadArgs* m_args, bool log_lock, bo
                             + "{\"topic\":\"MONITORING\""
                             + ",\"time\":\""+TimeStringFromUnixMs(msg.second.timestamp)+"\""
                             + ",\"device\":\""+ msg.second.device +"\""
+                            + ",\"device_id\":"+ std::to_string((*m_args->device_ids)[msg.second.device])
                             + ",\"subject\":\""+ msg.second.subject +"\""
                             + ",\"data\":"+ msg.second.json_data +"}";
     first=false;
@@ -1550,6 +1581,32 @@ bool Services::SetExportConfigFunc(std::function<bool(std::string&)> func){
   
   
   return allgood;
+  
+}
+
+uint64_t Services::GetDeviceID(const std::string& device_name){
+  
+  if(device_ids.count(device_name)) return device_ids[device_name];
+  
+  uint64_t the_id =0;
+  std::string query = "SELECT device_id FROM devices WHERE name='"+device_name+"'";
+  std::string response;
+  bool ok = SQLQuery(query, response);
+  if(ok){
+    try {
+      the_id = std::stoi(response);
+    } catch(std::exception& e){
+      std::cerr<<"Error parsing response from GetDeviceID: '"<<response<<"'"<<std::endl;
+      ok=false;
+    }
+  }
+  if(!ok){
+    std::cerr<<"Error! Device '"+device_name+"' is not in the devices table! This device is unknown!"<<std::endl;
+  }
+  
+  device_ids[device_name] = the_id;
+  
+  return the_id;
   
 }
 
