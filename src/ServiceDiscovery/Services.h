@@ -147,13 +147,14 @@ namespace ToolFramework {
     static void BufferThread(Thread_args* args);
     static bool BatchAndSendMulticast(BufferThreadArgs* m_args, bool log_lock, bool mon_lock);
     std::string SCLocalConfig(const char*);
-    uint64_t GetDeviceID(const std::string& device_name);
+    uint64_t GetDeviceID(const std::string& device_name, bool clear=false);
     
     //size_t GetMTU(std::string iface_name);
     //std::set<std::string> GetInterfaces();
     
     std::string m_name;
     std::map<std::string, uint64_t> device_ids;
+    std::string device_id_path;
     std::string config_devicename;
     bool m_verbose;
     zmq::context_t* m_context;

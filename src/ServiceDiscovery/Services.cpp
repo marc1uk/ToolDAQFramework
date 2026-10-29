@@ -95,7 +95,6 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
   }
   
   // get device ID from file if we have it
-  std::string device_id_path;
   if(m_variables.Get("device_id_path", device_id_path)){
     Store devnames;
     devnames.Initialise(device_id_path);
@@ -106,17 +105,7 @@ bool Services::Init(Store &m_variables, zmq::context_t* context_in, SlowControlC
   
   // otherwise fetch device ID for this device name from the DB
   if(device_ids.count(m_name)==0){
-    if(GetDeviceID(m_name)>0){
-      // store in local file
-      if(!device_id_path.empty()){
-        std::ofstream fdevice_ids(device_id_path);
-        if(fdevice_ids.is_open()){
-          fdevice_ids << m_name << device_ids[m_name];
-        } else {
-          std::cerr<<"Warning: Could not open device_id_path: '"<<device_id_path<<"'"<<std::endl;
-        }
-      }
-    }
+    GetDeviceID(m_name, true);
   }
   
   // start background thread to handle sending batches of buffered logging/monitoring messages
@@ -1584,7 +1573,7 @@ bool Services::SetExportConfigFunc(std::function<bool(std::string&)> func){
   
 }
 
-uint64_t Services::GetDeviceID(const std::string& device_name){
+uint64_t Services::GetDeviceID(const std::string& device_name, bool clear){
   
   if(device_ids.count(device_name)) return device_ids[device_name];
   
@@ -1605,6 +1594,19 @@ uint64_t Services::GetDeviceID(const std::string& device_name){
   }
   
   device_ids[device_name] = the_id;
+  
+  // add it to the file
+  if(ok && !device_id_path.empty()){
+    std::ios_base::openmode mode = std::ios_base::out;
+    if(!clear) mode |= std::ios_base::app;
+    std::ofstream fdevice_ids(device_id_path, mode);
+    if(fdevice_ids.is_open()){
+      fdevice_ids << device_name << the_id << '\n';
+      fdevice_ids.close();
+    } else {
+      std::cerr<<"Warning: Could not open device_id_path: '"<<device_id_path<<"'"<<std::endl;
+    }
+  }
   
   return the_id;
   
